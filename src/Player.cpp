@@ -1,4 +1,5 @@
 #include "Player.h"
+#include "PhysicsUtilities.h"
 #include "globals.h"
 
 #include <box2d/b2_world.h>
@@ -65,8 +66,13 @@ void Player::beginContact(b2Contact *contact, b2Fixture *ourFixture, b2Fixture *
     contact->GetWorldManifold(&contactWorldManifold);
     // std::cout << "CONTACT NORMAL:" << contactWorldManifold.normal.x << "," << contactWorldManifold.normal.y << std::endl;
 
+    const b2AABB player_aabb = get_AABB_for_fixture(ourFixture);
+    const b2AABB tile_aabb = get_AABB_for_fixture(otherFixture);
+    const bool isAbove = player_aabb.lowerBound.y + OVERLAP_TOLERANCE >= tile_aabb.upperBound.y;
+    // std::cout << "Player::beginContact(): normal.y: " << contactWorldManifold.normal.y << "; tile_aabb.upperBound.y: " << tile_aabb.upperBound.y << "; player_aabb.lowerBound.y: " << player_aabb.lowerBound.y << "; isAbove: " << isAbove << std::endl;
+
     // determine if we are standing on the colliding object
-    if (contactWorldManifold.normal.y > 0.2)
+    if (contactWorldManifold.normal.y > 0.2 && isAbove)
     {
         fixtures_underfoot.insert(otherFixture);
         contact->SetFriction(0.95);

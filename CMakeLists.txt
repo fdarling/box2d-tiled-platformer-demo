@@ -17,6 +17,7 @@ include_directories(
 
 add_executable(${PROJECT_NAME}
     src/PhysicsDebugDrawer.cpp
+    src/PhysicsUtilities.cpp
     src/GameObject.cpp
     src/PhysicsContactListener.cpp
     src/Level.cpp
