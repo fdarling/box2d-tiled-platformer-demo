@@ -73,4 +73,5 @@ The keyboard controls:
 * <kbd>&#8592;</kbd> for left
 * <kbd>&#8594;</kbd> for right
 * <kbd>&#8593;</kbd> for jump
+* <kbd>&#8595;</kbd> for drop down from one-way platform
 * <kbd>ESC</kbd> will exit the game.

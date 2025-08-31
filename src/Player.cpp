@@ -1,4 +1,5 @@
 #include "Player.h"
+#include "Level.h"
 #include "PhysicsUtilities.h"
 #include "globals.h"
 
@@ -14,8 +15,9 @@ static const int PLAYER_WIDTH = 16; // pixels
 static const int PLAYER_HEIGHT = 24; // pixels
 static const int PLAYER_WALKING_VELOCITY = 3.0; // m/s
 static const int PLAYER_JUMP_VELOCITY = 5.0; // m/s
+static const int PLAYER_DROP_VELOCITY = 1.0; // m/s
 
-Player::Player(b2World *bWorld) : world(bWorld), body(nullptr)
+Player::Player(b2World *bWorld, Level *lvl) : world(bWorld), body(nullptr), level(lvl)
 {
     b2BodyDef bodyDef;
     bodyDef.type = b2_dynamicBody;
@@ -53,15 +55,68 @@ void Player::jump()
     body->SetLinearVelocity(vel);
 }
 
+void Player::dropDown()
+{
+    for (std::set<b2Fixture*>::iterator it = fixtures_underfoot.begin(); it != fixtures_underfoot.end(); ++it)
+    {
+        b2Fixture * const fixture = *it;
+        if (!level->fixtureIsOneWay(fixture))
+        {
+            // std::cout << "Can't drop!" << std::endl;
+            return;
+        }
+    }
+    // std::cout << "Can drop!" << std::endl;
+
+    // set it up so that we'll phase through these fixtures
+    drop_through_fixtures = fixtures_underfoot;
+    fixtures_underfoot.clear();
+
+    // set our velocity downward
+    b2Vec2 vel = body->GetLinearVelocity();
+    vel.y = -PLAYER_DROP_VELOCITY;
+    body->SetLinearVelocity(vel);
+}
+
 bool Player::canJump() const
 {
     return !fixtures_underfoot.empty();
 }
 
-void Player::beginContact(b2Contact *contact, b2Fixture *ourFixture, b2Fixture *otherFixture)
+void Player::preSolve(b2Contact *contact, const b2Manifold *oldManifold, b2Fixture *ourFixture, b2Fixture *otherFixture)
 {
+    (void)oldManifold;
     (void)ourFixture;
 
+    // check if we are done dropping through
+    if (drop_through_fixtures.empty())
+        return;
+
+    // check if this is not even a one-way tile (where we can never drop through)
+    if (!level->fixtureIsOneWay(otherFixture))
+        return;
+
+    // check if this is a fixture we have already marked as no-contact
+    if (drop_through_fixtures.find(otherFixture) != drop_through_fixtures.end())
+    {
+        contact->SetEnabled(false);
+        return;
+    }
+
+    // check to see if this fixture is at the same level as the ones we marked
+    b2Fixture * const markedFixture = *drop_through_fixtures.begin();
+    const b2AABB marked_aabb = get_AABB_for_fixture(markedFixture);
+    const b2AABB tile_aabb = get_AABB_for_fixture(otherFixture);
+    if (tile_aabb.upperBound.y == marked_aabb.upperBound.y)
+    {
+        // drop through this tile too
+        drop_through_fixtures.insert(otherFixture);
+        contact->SetEnabled(false);
+    }
+}
+
+void Player::beginContact(b2Contact *contact, b2Fixture *ourFixture, b2Fixture *otherFixture)
+{
     b2WorldManifold contactWorldManifold;
     contact->GetWorldManifold(&contactWorldManifold);
     // std::cout << "CONTACT NORMAL:" << contactWorldManifold.normal.x << "," << contactWorldManifold.normal.y << std::endl;
@@ -90,4 +145,5 @@ void Player::endContact(b2Contact *contact, b2Fixture *ourFixture, b2Fixture *ot
     (void)ourFixture;
 
     fixtures_underfoot.erase(otherFixture);
+    drop_through_fixtures.erase(otherFixture);
 }

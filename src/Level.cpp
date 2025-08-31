@@ -35,6 +35,10 @@ Level::Level(b2World *bWorld) : world(bWorld), tilesBody(nullptr)
     addTile(7, 11, true);
     addTile(7, 12, true);
     addTile(8, 13, true);
+
+    addTile(8, 6);
+    addTile(8, 7, true);
+    addTile(8, 8, true);
 }
 
 Level::~Level()
@@ -42,24 +46,29 @@ Level::~Level()
     world->DestroyBody(tilesBody);
 }
 
-void Level::preSolve(b2Contact *contact, const b2Manifold *oldManifold, b2Fixture *ourFixture, b2Fixture *otherFixture)
+bool Level::fixtureIsOneWay(const b2Fixture *fixture) const
 {
-    (void)oldManifold;
-    (void)ourFixture;
-    (void)otherFixture;
-
     // determine the tile coordinates from the fixture pointer
-    std::unordered_map<b2Fixture*, std::pair<int, int> >::const_iterator it = fixtureToTileMap.find(ourFixture);
+    b2Fixture * const fix = const_cast<b2Fixture *>(fixture);
+    std::unordered_map<b2Fixture*, std::pair<int, int> >::const_iterator it = fixtureToTileMap.find(fix);
     if (it == fixtureToTileMap.end())
-        return;
+        return false;
 
     // determine if we have a tile at that coordinate
     std::unordered_map<std::pair<int, int>, bool, coord_pair_hash>::const_iterator it2 = tiles.find(it->second);
     if (it2 == tiles.end())
-        return;
+        return false;
+
+    // return the stored boolean that indicates one-way tiles
+    return it2->second;
+}
+
+void Level::preSolve(b2Contact *contact, const b2Manifold *oldManifold, b2Fixture *ourFixture, b2Fixture *otherFixture)
+{
+    (void)oldManifold;
 
     // bail early if the tile isn't one-way (default to normal collision behavior)
-    if (!it2->second)
+    if (!fixtureIsOneWay(ourFixture))
         return;
 
     // if we get this far, we might need a one way collision override!

@@ -15,6 +15,8 @@ public:
     Level(b2World *bWorld);
     ~Level();
 
+    bool fixtureIsOneWay(const b2Fixture *fixture) const;
+
     void preSolve(b2Contact *contact, const b2Manifold *oldManifold, b2Fixture *ourFixture, b2Fixture *otherFixture) override;
 protected:
     void addTile(int row, int col, bool oneWay = false);

@@ -2,7 +2,7 @@
 #include "PhysicsDebugDrawer.h"
 #include "globals.h"
 
-Game::Game() : bWorld(b2Vec2(0.0, -9.8)), level(&bWorld), player(&bWorld), window(nullptr, &SDL_DestroyWindow), renderer(nullptr, &SDL_DestroyRenderer)
+Game::Game() : bWorld(b2Vec2(0.0, -9.8)), level(&bWorld), player(&bWorld, &level), window(nullptr, &SDL_DestroyWindow), renderer(nullptr, &SDL_DestroyRenderer)
 {
     bWorld.SetContactListener(&contactListener);
 }
@@ -121,6 +121,10 @@ bool Game::processEvents()
         {
             switch (event.key.keysym.sym)
             {
+                case SDLK_DOWN:
+                player.dropDown();
+                break;
+
                 case SDLK_ESCAPE:
                 return false; // signal that we want to quit the game
 
