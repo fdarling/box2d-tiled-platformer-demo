@@ -10,6 +10,7 @@
 #include <box2d/b2_contact.h>
 
 // #include <iostream>
+#include <algorithm>
 
 static const int PLAYER_WIDTH = 16; // pixels
 static const int PLAYER_HEIGHT = 24; // pixels
@@ -57,15 +58,10 @@ void Player::jump()
 
 void Player::dropDown()
 {
-    for (std::set<b2Fixture*>::iterator it = fixtures_underfoot.begin(); it != fixtures_underfoot.end(); ++it)
-    {
-        b2Fixture * const fixture = *it;
-        if (!level->fixtureIsOneWay(fixture))
-        {
-            // std::cout << "Can't drop!" << std::endl;
-            return;
-        }
-    }
+    if (fixtures_underfoot.empty())
+        return;
+    if (!std::all_of(fixtures_underfoot.cbegin(), fixtures_underfoot.cend(), [this] (const b2Fixture * const fixture) -> bool {return level->fixtureIsOneWay(fixture);}))
+        return;
     // std::cout << "Can drop!" << std::endl;
 
     // set it up so that we'll phase through these fixtures
