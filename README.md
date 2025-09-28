@@ -1,6 +1,9 @@
 # Overview
 
-2D platformer game that uses a tile based level.
+2D platformer game that uses a tile based level. The collision detection / physics come from using the library Box2D. Walking, falling, jumping, and one-way platforms are all demonstrated.
+
+<img width="810" height="634" alt="Box2D_Tiled_Platformer_Demo_Screenshot" src="https://github.com/user-attachments/assets/fa356e93-7183-460f-8bd4-7fef6b617e40" />
+
 
 ## Dependencies
 
